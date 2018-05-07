@@ -7,15 +7,22 @@ Created on Sun May  6 19:10:28 2018
 
 import os
 import subprocess, threading
+from subprocess import PIPE,Popen
 from flock import flock
 import pandas as pd
 import pymongo
 import uuid
-
+from subprocess import PIPE
+import time
 from optparse import OptionParser
+from pymongo import MongoClient
+client = MongoClient()
+db = client['ip']
+conn = db['pandas']
+import ipaddress
 
 # unique id of nat count run
-log_id = uuid.uuid1()
+log_id = "raw_data"
 
 # parsing command line options and setting defaults 
 parser = OptionParser()
@@ -25,15 +32,15 @@ parser.add_option("-p", "--pcap", dest="pcap", default=None,
                   help="use pcap file")
 parser.add_option("-f", "--filter", dest="filter", default=" ",
                   help="use pcap file")
-parser.add_option("-d", "--dir", dest="logdir", default=log_dir,
+parser.add_option("-d", "--dir", dest="logdir", default="/var/log/p0f/",
                   help="use pcap file")
 parser.add_option("-u", "--uniqueid", dest="uniqueid", default=log_id,
                   help="custom data identifier")
 parser.add_option("-c", "--cleanup", dest="cleanup", default=True,
                   help="custom data identifier")
-parser.add_option("-m", "--minutes", dest="uniqueid", default=10,
+parser.add_option("-m", "--minutes", dest="minutes", default=10,
                   help="minutes")
-
+(options, args) = parser.parse_args()
 # unique id of nat count run
 log_id = uuid.uuid1()
 
@@ -42,8 +49,7 @@ pipeline = [
         {"$group": {"_id": { "cip" : "$cip" }, "raw_ips": {"$addToSet": "$raw_ip"}}},
         {"$unwind" : "$raw_ips" },
         {"$group":{"_id":"$_id" , "count" :{ "$sum" : 1}}},
-        {"$sort": SON([("count", -1), ("_id", -1)])},
-        {"$out" : uniqueid + "-devices" }
+        {"$out" : str(options.uniqueid) + "-devices" }
 ]
 
 def p0f_parse(inFile):
@@ -74,10 +80,10 @@ def p0f_parse(inFile):
         #df2_checkpriv = df2['client_ip'].apply(lambda x: ipaddress.ip_address(x).is_private)
         df2['cip'] = df2['client_ip'].apply(lambda x: x.split('/')[0])
         df2['sip'] = df2['server_ip'].apply(lambda x: x.split('/')[0])
-        db[options.uniqueid + 'raw'].insert_many(df2.to_dict('records'))
+        db[str(options.uniqueid) + 'raw'].insert_many(df2.to_dict('records'))
 
 #location of the p0f logger
-logfile = options.logdir + options.uniqueid
+logfile = options.logdir + str(options.uniqueid)
 
 #command class to keep processes organized and control threads
 class Command(object):
@@ -88,9 +94,18 @@ class Command(object):
     def run(self, timeout):
         def target():
             print('Thread started')
-            self.process = subprocess.Popen(self.cmd, shell=True)
-            self.process.communicate()
-            print('Thread finished')
+	    print(str(self.cmd))
+	    if "./p0f/p0f" in str(self.cmd):	
+	 	self.process = Popen(self.cmd,shell=True)
+		self.process.communicate()
+		time.sleep(options.minutes)
+		self.process.kill()
+	    else:
+		self.process = Popen(self.cmd,shell=True)
+            	self.process.communicate()
+	    #self.process = subprocess.Popen(self.cmd, )
+            
+	    print('Thread finished')
 
         thread = threading.Thread(target=target)
         thread.start()
@@ -100,7 +115,7 @@ class Command(object):
             print('Terminating process')
             self.process.terminate()
             thread.join()
-        print(self.process.returncode)
+        #print(self.process.returncode)
         
 # function to clean old p0f logs and processes
 def clean_old():
@@ -120,11 +135,10 @@ def clean_old():
 def p0f():
 	command = Command("./p0f/p0f " + "-i " + options.interface + " -o " + logfile)
 	command.run(timeout=options.minutes)
-
 # apply tcp filter
-def filter():
+def grep_log():
 	command = Command("grep -P '^(?=.*raw_sig)(?=.*" +
-                           filter + " )' > " + logfile + "-filtered.csv")
+                           options.filter + " )' > " + logfile + "-filtered.csv")
 	command.run(timeout=options.minutes)		
 
 #split large logs
@@ -141,7 +155,7 @@ def split():
 
 
 def process_df():
-    pprint.pprint(list(db[uniqueid].aggregate(pipeline)))
+    print(list(db[options.uniqueid].aggregate(pipeline)))
     
 
 def main():
@@ -152,7 +166,7 @@ def main():
     if lock:
         clean_old()
         p0f()
-        filter()
+        grep_log()
         split()
         process_df()
         clean_old()
