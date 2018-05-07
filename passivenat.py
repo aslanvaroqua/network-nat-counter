@@ -22,8 +22,7 @@ conn = db['pandas']
 import ipaddress
 
 # unique id of nat count run
-log_id = "raw_data"
-
+log_id = str(uuid.uuid1())
 # parsing command line options and setting defaults 
 parser = OptionParser()
 parser.add_option("-i", "--interface", dest="interface", default="eno2",
@@ -42,7 +41,6 @@ parser.add_option("-m", "--minutes", dest="minutes", default=10,
                   help="minutes")
 (options, args) = parser.parse_args()
 # unique id of nat count run
-log_id = uuid.uuid1()
 
 # pipeline for aggregating the dataframe
 pipeline = [
