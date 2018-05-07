@@ -87,34 +87,34 @@ class Command(object):
 
     def run(self, timeout):
         def target():
-            print 'Thread started'
+            print('Thread started')
             self.process = subprocess.Popen(self.cmd, shell=True)
             self.process.communicate()
-            print 'Thread finished'
+            print('Thread finished')
 
         thread = threading.Thread(target=target)
         thread.start()
 
         thread.join(timeout)
         if thread.is_alive():
-            print 'Terminating process'
+            print('Terminating process')
             self.process.terminate()
             thread.join()
-        print self.process.returncode
+        print(self.process.returncode)
         
 # function to clean old p0f logs and processes
 def clean_old():
 	if options.cleanup:
-		command = Command("rm -rf /var/log/p0f/*")
-		command.run(timeout=1)
-       command = Command("pkill -n p0f")
-		command.run(timeout=1)
-       command = Command("pkill -f p0f")
-		command.run(timeout=1)
-       command = Command("pkill -f passive_nat")
-		command.run(timeout=1)
-       command = Command("pkill -n passive_nat")
-		command.run(timeout=1)
+        command = Command("rm -rf /var/log/p0f/*")
+        command.run(timeout=1)
+        command = Command("pkill -n p0f")
+        command.run(timeout=1)
+        command = Command("pkill -f p0f")
+        command.run(timeout=1)
+        command = Command("pkill -f passive_nat")
+        command.run(timeout=1)
+        command = Command("pkill -n passive_nat")
+        command.run(timeout=1)
 
 #start p0f
 def p0f():
@@ -158,13 +158,10 @@ def main():
         clean_old()
         
     else:
-        print 'someone else is working here!'
+        print('someone else is working here!')
 
 
 
 
 if __name__ == "__main__":
        main()
-
-
-
