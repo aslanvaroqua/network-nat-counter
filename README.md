@@ -67,6 +67,6 @@ parser.add_option("-m", "--minutes", dest="uniqueid", default=10,
 ```
 
 finally:
-``
+```
 python passivenat.py -i etho -f {ipaddressToFilter} --u {someuniqueidforthedata} -m {minutestocollectdata}
 ```
