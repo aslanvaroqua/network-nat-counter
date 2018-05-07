@@ -22,8 +22,8 @@ pipeline = [
         {"$group": {"_id": { "cip" : "$cip" }, "raw_ips": {"$addToSet": "$raw_ip"}}},
         {"$unwind" : "$raw_ips" },
         {"$group":{"_id":"$_id" , "count" :{ "$sum" : 1}}},
-        {"$sort": SON([("count", -1), ("_id", -1)])}
-        { $out : uniqueid + "-devices" }
+        {"$sort": SON([("count", -1), ("_id", -1)])},
+        {"$out" : uniqueid + "-devices" }
 ]
 
 def p0f_parse(inFile):
@@ -64,7 +64,7 @@ parser.add_option("-p", "--pcap", dest="pcap", default=None,
                   help="use pcap file")
 parser.add_option("-f", "--filter", dest="filter", default=" ",
                   help="use pcap file")
-parser.add_option("-d", "--dir", dest="logdir", default=default=log_dir",
+parser.add_option("-d", "--dir", dest="logdir", default=log_dir,
                   help="use pcap file")
 parser.add_option("-u", "--uniqueid", dest="uniqueid", default=log_id,
                   help="custom data identifier")
