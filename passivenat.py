@@ -134,7 +134,7 @@ def split():
    command.run(timeout=5)
    command = Command("rm " + logfile)
    command.run(timeout=options.minutes)
-   command = Command("rm " + logfile + "-clean.csv)
+   command = Command("rm " + logfile + "-clean.csv")
    command.run(timeout=options.minutes)
 
 
