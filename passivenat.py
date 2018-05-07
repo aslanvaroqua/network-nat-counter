@@ -17,6 +17,26 @@ from optparse import OptionParser
 # unique id of nat count run
 log_id = uuid.uuid1()
 
+# parsing command line options and setting defaults 
+parser = OptionParser()
+parser.add_option("-i", "--interface", dest="interface", default="eno2",
+                  help="device to attach for listening")
+parser.add_option("-p", "--pcap", dest="pcap", default=None,
+                  help="use pcap file")
+parser.add_option("-f", "--filter", dest="filter", default=" ",
+                  help="use pcap file")
+parser.add_option("-d", "--dir", dest="logdir", default=log_dir,
+                  help="use pcap file")
+parser.add_option("-u", "--uniqueid", dest="uniqueid", default=log_id,
+                  help="custom data identifier")
+parser.add_option("-c", "--cleanup", dest="cleanup", default=True,
+                  help="custom data identifier")
+parser.add_option("-m", "--minutes", dest="uniqueid", default=10,
+                  help="minutes")
+
+# unique id of nat count run
+log_id = uuid.uuid1()
+
 # pipeline for aggregating the dataframe
 pipeline = [
         {"$group": {"_id": { "cip" : "$cip" }, "raw_ips": {"$addToSet": "$raw_ip"}}},
@@ -54,27 +74,7 @@ def p0f_parse(inFile):
         #df2_checkpriv = df2['client_ip'].apply(lambda x: ipaddress.ip_address(x).is_private)
         df2['cip'] = df2['client_ip'].apply(lambda x: x.split('/')[0])
         df2['sip'] = df2['server_ip'].apply(lambda x: x.split('/')[0])
-        db[uniqueid + 'raw'].insert_many(df2.to_dict('records'))
-
-# parsing command line options and setting defaults 
-parser = OptionParser()
-parser.add_option("-i", "--interface", dest="interface", default="eno2",
-                  help="device to attach for listening")
-parser.add_option("-p", "--pcap", dest="pcap", default=None,
-                  help="use pcap file")
-parser.add_option("-f", "--filter", dest="filter", default=" ",
-                  help="use pcap file")
-parser.add_option("-d", "--dir", dest="logdir", default=log_dir,
-                  help="use pcap file")
-parser.add_option("-u", "--uniqueid", dest="uniqueid", default=log_id,
-                  help="custom data identifier")
-parser.add_option("-c", "--cleanup", dest="cleanup", default=True,
-                  help="custom data identifier")
-parser.add_option("-m", "--minutes", dest="uniqueid", default=10,
-                  help="minutes")
-
-
-(options, args) = parser.parse_args()
+        db[options.uniqueid + 'raw'].insert_many(df2.to_dict('records'))
 
 #location of the p0f logger
 logfile = options.logdir + options.uniqueid
@@ -104,7 +104,7 @@ class Command(object):
         
 # function to clean old p0f logs and processes
 def clean_old():
-	if options.cleanup:
+	#if options.cleanup:
         command = Command("rm -rf /var/log/p0f/*")
         command.run(timeout=1)
         command = Command("pkill -n p0f")
