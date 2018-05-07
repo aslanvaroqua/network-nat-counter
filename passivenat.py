@@ -118,7 +118,7 @@ def clean_old():
 
 #start p0f
 def p0f():
-	command = Command("./p0f " + "-i " + options.interface + " -o " + logfile)
+	command = Command("./p0f/p0f " + "-i " + options.interface + " -o " + logfile)
 	command.run(timeout=options.minutes)
 
 # apply tcp filter
