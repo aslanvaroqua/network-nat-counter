@@ -1,5 +1,5 @@
 # passivenat
-passivenat
+passivenat is a tool, written in python to attach to a network interface for device fingerprinting. This can be useful in learning about a network topology passively without generating any packets. Uses the good old p0f program and has been tested and scales onto a good size network... However, the big-data-net-analytics can take care of fingerprinting on large networks although its not in real time. 
 
 *must be super user for live devices 
 ```
